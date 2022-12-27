@@ -15,7 +15,16 @@ class BinaryTreeNode {
     return Math.max(this.heightLeft, this.heightRight);
   }
   recalculateHeight(){
-    //todo
+    if(this.left){
+      this.heightLeft = this.left.getHeight()+1;
+    } else {
+      this.heightLeft = 0;
+    }
+    if(this.right){
+      this.heightRight = this.right.getHeight()+1;
+    } else {
+      this.heightRight = 0;
+    }
   }
   recalculateBalanceFactor(){
     this.balanceFactor = this.heightRight - this.heightLeft
@@ -24,48 +33,47 @@ class BinaryTreeNode {
 class BinaryTree {
   #root;
   #size;
-  #sortingFunc;
-  constructor(array){
+  /**
+   * Expects a sorted array on creation, will work without a sorted array but will cause unnecessary rotations. Can add items via insert in random order as tree is self-balancing
+   * @param {Array} sortedArray
+   */
+  constructor(sortedArray = []){
     this.#root = null;
     this.#size = 0;
-    // this.#buildTree(array, sortFunc);
+    this.#buildTree(array);
   }
-  // #buildTree(array, sortFunc){
-  //   if(array.length < 1){
-  //     return;
-  //   }
-  //   const sortedArray = array.sort(sortFunc);
-  //   const sortedArrayWithoutDuplicates = [];
-  //   if(sortedArray.length > 0){
-  //     sortedArrayWithoutDuplicates.push[sortedArray[0]]
-  //   }
-  //   for(let i = 1; i < sortedArray.length; i++){
-  //     if(sortedArray[i].compareTo(sortedArray[i-1]) !== 0){
-  //       sortedArrayWithoutDuplicates.push(sortedArray[i]);
-  //     }
-  //   }
-  //   this.#size = sortedArrayWithoutDuplicates.length;
-  //   let start = 0;
-  //   let end = sortedArrayWithoutDuplicates.length-1;
-  //   let middle = Math.floor((start+end)/2);
-  //   this.#root = new BinaryTreeNode(sortedArrayWithoutDuplicates[middle]);  
-  //   this.#root.left = addNode(start, middle-1);
-  //   this.#root.right = addNode(middle+1, end);
-  //   function addNode(start, end){
-  //     if(start === end){
-  //       return new BinaryTreeNode(sortedArrayWithoutDuplicates[start]);
-  //     } else if (start > end){
-  //       return null;
-  //     }
-  //     else {
-  //       const middle = Math.floor((start+end)/2);
-  //       const newNode = new BinaryTreeNode(sortedArrayWithoutDuplicates[middle]);
-  //       newNode.left = addNode(start, middle-1)
-  //       newNode.right = addNode(middle+1, end);
-  //       return newNode;
-  //     }
-  //   }
-  // }
+  #buildTree(array){
+    if(array.length < 1){
+      return;
+    }
+    let placeInQue = 0;
+    const que = [{start: 0, end: array.length-1}];
+    const queToBuild = [];
+    while(placeInQue < que.length){
+      const {start, end} = que[placeInQue];
+      if(start <= end){
+        if(start === end){
+          queToBuild.push(array[start]);
+          placeInQue++;
+        }
+        else {
+          const middle = Math.floor((start+end)/2);
+          queToBuild.push(array[middle]);
+          que.push({start, end: middle-1});
+          que.push({start: middle+1, end});
+          placeInQue++;
+        }
+      } else {
+        placeInQue++;
+      }
+    }
+  
+    queToBuild.forEach(item => {
+      console.log(item.toString())
+      this.insert(item)
+    })
+    
+  }
   insert(data){
     if(this.#root){
       const path = [];
@@ -73,14 +81,14 @@ class BinaryTree {
       let foundSpot = false;
       let current = this.#root;
       while(!foundSpot){
-        if(current.data.compareTo(data) === 0){
+        const compareResult = current.data.compareTo(data);
+        if(compareResult === 0){
           duplicate = true;
           break;
         }
-        if(current.data.compareTo(data) > 0){
+        else if(compareResult > 0){
           path.push({
             node: current, 
-            data: current.data.toString(),
             dir: -1
           });
           if(current.left){
@@ -89,18 +97,16 @@ class BinaryTree {
             const newNode = new BinaryTreeNode(data);
             current.left = newNode;
             path.push({
-              node: newNode, 
-              data: newNode.data.toString(),
+              node: newNode,
               dir: 0
             });
             this.#size++;
             foundSpot = true;
           }
         }
-        if(current.data.compareTo(data) < 0){
+        else {
           path.push({
             node: current, 
-            data: current.data.toString(),
             dir: 1
           })
           if(current.right){
@@ -110,7 +116,6 @@ class BinaryTree {
             current.right = newNode;
             path.push({
               node: newNode, 
-              data: newNode.data.toString(),
               dir: 0
             });
             this.#size++;
@@ -126,12 +131,12 @@ class BinaryTree {
           if(dir === 1){
             if(height !== parentNode.heightRight){
               parentNode.heightRight = height;
-              parentNode.balanceFactor = parentNode.heightRight-parentNode.heightLeft;
+              parentNode.recalculateBalanceFactor();
             }
           } else {
             if(height !== parentNode.heightLeft){
               parentNode.heightLeft = height;
-              parentNode.balanceFactor = parentNode.heightRight-parentNode.heightLeft;
+              parentNode.recalculateBalanceFactor();
             }
           }
           if(Math.abs(parentNode.balanceFactor) === 2){
@@ -145,10 +150,13 @@ class BinaryTree {
               const parentNodeForRebalacing = path[i-2].node;
               parentNodeConnection = path[i-2].dir === 1 ? node => parentNodeForRebalacing.right = node : node => parentNodeForRebalacing.left = node;
             }
-            rotate(nodeA.balanceFactor, nodeB.balanceFactor, parentNodeConnection, nodeA, nodeB, nodeC);
+            this.#rotate(nodeA.balanceFactor, nodeB.balanceFactor, parentNodeConnection, nodeA, nodeB, nodeC);
             break;
           }
           height++;
+        }
+        for(let i = path.length-1; i < 0; i--){
+          path[i].node.recalculateHeight();
         }
       }
     }
@@ -156,76 +164,25 @@ class BinaryTree {
       this.#root = new BinaryTreeNode(data);
       this.#size++;
     }
-    function rotate(parentBalanceFactor, childBalanceFactor, nodeAParentConnection, nodeA, nodeB, nodeC){
-      if(parentBalanceFactor === 2){
-        childBalanceFactor === 1 ? RR_Rotation(nodeAParentConnection, nodeA, nodeB) : RL_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC);
+  }
+  delete(data){
+    const path = [];
+    let current = this.#root;
+    let foundNode = false;
+    while(current && !foundNode){
+      const compareResult = current.data.compareTo(data);
+      if(compareResult === 0){
+        foundNode = true;
+      } else if (compareResult > 0) {
+        path.push({
+          node: current,
+          dir: -1,
+
+        })
       }
-      else if(parentBalanceFactor === -2){
-        childBalanceFactor === -1 ? LL_Rotation(nodeAParentConnection, nodeA, nodeB) : LR_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC);
-      }
-      function LL_Rotation(nodeAParentConnection, nodeA, nodeB){
-        console.log('LL_Rotation')
-        //Done when with a LL Imbalance (-2) at parent with (-1) at direct left child
-        const {right: BRight} = nodeB;
-        nodeAParentConnection(nodeB);
-        nodeA.left = BRight;
-        nodeB.right = nodeA;
-        nodeA.heightLeft = nodeA.left ? nodeA.left.getHeight() + 1 : 0
-        nodeB.heightRight += 1;
-        nodeA.recalculateBalanceFactor();
-        nodeB.recalculateBalanceFactor();
-      }
-      function RR_Rotation(nodeAParentConnection, nodeA, nodeB){
-        console.log('RR_Rotation')
-        //Done when with a LL Imbalance (+2) at parent with (+1) at direct right child
-        const {left: BLeft} = nodeB;
-        nodeAParentConnection(nodeB);
-        nodeA.right = BLeft;
-        nodeB.left = nodeA;
-        nodeA.heightRight -= 2;
-        nodeB.heightLeft += 1;
-        nodeA.balanceFactor = nodeA.heightLeft - nodeA.heightRight;
-        nodeB.balanceFactor = nodeB.heightLeft - nodeB.heightRight;
-      }
-      function LR_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC){
-        console.log('LR_Rotation')
-        //Done when with a LR Imbalance (-2) at parent with a (+1) at the child
-        nodeAParentConnection(nodeC);
-        nodeA.left = null;
-        nodeB.right = null;
-        nodeC.right = nodeA;
-        nodeC.left = nodeB;
-        nodeA.heightLeft = 0;
-        nodeA.heightRight = 0;
-        nodeA.balanceFactor = 0;
-        nodeB.heightLeft = 0;
-        nodeB.heightRight = 0;
-        nodeB.balanceFactor = 0;
-        nodeC.heightLeft = 1;
-        nodeC.heightRight = 1;
-        nodeC.balanceFactor = 0;
-      }
-      function RL_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC){
-        console.log('RL_Rotation')
-        //Done when with a RL Imbalance (+2) at parent with a (-1) at the child
-        nodeAParentConnection(nodeC);
-        const CL = nodeC.left;
-        const CR = nodeC.right;
-        nodeC.left = nodeA;
-        nodeC.right = nodeB;
-        nodeA.right = CL;
-        nodeB.left = CR;
-        nodeA.heightRight = nodeA.right ? Math.max(nodeA.right.heightLeft, nodeA.right.heightRight) + 1 : 0;
-        nodeA.balanceFactor = nodeA.heightRight - nodeA.heightLeft;
-        nodeB.heightLeft = nodeB.left ? Math.max(nodeB.left.heightLeft, nodeB.left.heightRight) : 0;
-        nodeB.balanceFactor = nodeB.heightRight - nodeB.heightLeft;
-        nodeC.heightLeft = Math.max(nodeA.heightLeft, nodeA.heightRight) + 1;
-        nodeC.heightRight = Math.max(nodeB.heightLeft, nodeB.heightRight) + 1;
-        nodeC.balanceFactor = nodeC.heightRight - nodeC.heightLeft;
-      }
+      else {}
     }
   }
-  delete(data){} //todo
   contains(data){
     return this.findNode(data) ? true : false;
   }
@@ -371,7 +328,7 @@ class BinaryTree {
     if (node.right !== null) {
       this.#prettyPrint(node.right, `${prefix}${isLeft ? '│   ' : '    '}`, false);
     }
-    console.log(`${prefix}${isLeft ? '└── ' : '┌── '}(${node.data},${node.balanceFactor})`);
+    console.log(`${prefix}${isLeft ? '└── ' : '┌── '} D:${node.data}, BF:${node.balanceFactor}, H:[${node.heightLeft},${node.heightRight}]`);
     if (node.left !== null) {
       this.#prettyPrint(node.left, `${prefix}${isLeft ? '    ' : '│   '}`, true);
     }
@@ -389,6 +346,71 @@ class BinaryTree {
   }
   printFromNode(node){
     this.#prettyPrint(node);
+  }
+  #rotate(parentBalanceFactor, childBalanceFactor, nodeAParentConnection, nodeA, nodeB, nodeC){
+    if(parentBalanceFactor === 2){
+      childBalanceFactor === 1 ? RR_Rotation(nodeAParentConnection, nodeA, nodeB) : RL_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC);
+    }
+    else if(parentBalanceFactor === -2){
+      childBalanceFactor === -1 ? LL_Rotation(nodeAParentConnection, nodeA, nodeB) : LR_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC);
+    }
+    function LL_Rotation(nodeAParentConnection, nodeA, nodeB){
+      console.log('LL_Rotation')
+      //Done when with a LL Imbalance (-2) at parent with (-1) at direct left child
+      const {right: BRight} = nodeB;
+      nodeAParentConnection(nodeB);
+      nodeA.left = BRight;
+      nodeB.right = nodeA;
+      nodeA.heightLeft = nodeA.left ? nodeA.left.getHeight() + 1 : 0
+      nodeB.heightRight += 1;
+      nodeA.recalculateBalanceFactor();
+      nodeB.recalculateBalanceFactor();
+    }
+    function RR_Rotation(nodeAParentConnection, nodeA, nodeB){
+      console.log('RR_Rotation')
+      //Done when with a LL Imbalance (+2) at parent with (+1) at direct right child
+      const {left: BLeft} = nodeB;
+      nodeAParentConnection(nodeB);
+      nodeA.right = BLeft;
+      nodeB.left = nodeA;
+      nodeA.heightRight -= 2;
+      nodeB.heightLeft += 1;
+      nodeA.balanceFactor = nodeA.heightLeft - nodeA.heightRight;
+      nodeB.balanceFactor = nodeB.heightLeft - nodeB.heightRight;
+    }
+    function LR_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC){
+      console.log('LR_Rotation')
+      //Done when with a LR Imbalance (-2) at parent with a (+1) at the child
+      nodeAParentConnection(nodeC);
+      const nodes = [nodeA, nodeB, nodeC];
+      const CL = nodeC.left;
+      const CR = nodeC.right;
+      nodeC.left = nodeB;
+      nodeC.right = nodeA;
+      nodeA.left = CR;
+      nodeB.right = CL;
+      nodes.forEach(node=>{
+        node.recalculateHeight();
+        node.recalculateBalanceFactor();
+      })
+      
+    }
+    function RL_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC){
+      console.log('RL_Rotation')
+      //Done when with a RL Imbalance (+2) at parent with a (-1) at the child
+      nodeAParentConnection(nodeC);
+      const nodes = [nodeA, nodeB, nodeC];
+      const CL = nodeC.left;
+      const CR = nodeC.right;
+      nodeC.left = nodeA;
+      nodeC.right = nodeB;
+      nodeA.right = CL;
+      nodeB.left = CR;
+      nodes.forEach(node=>{
+        node.recalculateHeight();
+        node.recalculateBalanceFactor();
+      })
+    }
   }
 }
 
