@@ -1,5 +1,5 @@
 import SingleLinkList from "../SingleLinkList/SingleLinkedList.js";
-class BinaryTreeNode {
+class BinarySearchTreeNode {
   constructor(data){
     this.data = data;
     this.balanceFactor = 0;
@@ -30,7 +30,7 @@ class BinaryTreeNode {
     this.balanceFactor = this.heightRight - this.heightLeft
   }
 }
-class BinaryTree {
+class BinarySearchTree {
   #root;
   #size;
   /**
@@ -40,7 +40,7 @@ class BinaryTree {
   constructor(sortedArray = []){
     this.#root = null;
     this.#size = 0;
-    this.#buildTree(array);
+    this.#buildTree(sortedArray);
   }
   #buildTree(array){
     if(array.length < 1){
@@ -67,12 +67,9 @@ class BinaryTree {
         placeInQue++;
       }
     }
-  
     queToBuild.forEach(item => {
-      console.log(item.toString())
       this.insert(item)
     })
-    
   }
   insert(data){
     if(this.#root){
@@ -94,7 +91,7 @@ class BinaryTree {
           if(current.left){
             current = current.left;
           } else {
-            const newNode = new BinaryTreeNode(data);
+            const newNode = new BinarySearchTreeNode(data);
             current.left = newNode;
             path.push({
               node: newNode,
@@ -112,7 +109,7 @@ class BinaryTree {
           if(current.right){
             current = current.right;
           } else {
-            const newNode = new BinaryTreeNode(data);
+            const newNode = new BinarySearchTreeNode(data);
             current.right = newNode;
             path.push({
               node: newNode, 
@@ -161,7 +158,7 @@ class BinaryTree {
       }
     }
     else {
-      this.#root = new BinaryTreeNode(data);
+      this.#root = new BinarySearchTreeNode(data);
       this.#size++;
     }
   }
@@ -173,14 +170,102 @@ class BinaryTree {
       const compareResult = current.data.compareTo(data);
       if(compareResult === 0){
         foundNode = true;
+        path.push({
+          node: current,
+          dir: 0,
+        })
       } else if (compareResult > 0) {
         path.push({
           node: current,
           dir: -1,
-
-        })
+        });
+        current = current.left;
       }
-      else {}
+      else {
+        path.push({
+          node: current,
+          dir: 1,
+        });
+        current = current.right;
+      }
+    }
+    if(foundNode){
+      const nodeParentArrayLocation = path.length - 2;
+      if(current.left === null && current.right === null){
+        if(nodeParentArrayLocation < 0) {
+          this.#root = null;
+        }
+        else {
+          const {node: parentNode, dir} = path[nodeParentArrayLocation];
+          if(dir === 1){
+            parentNode.right = null;
+          }
+          else {
+            parentNode.left = null;
+          }
+        }
+      }
+      else if(current.left && current.right){} //!TODO
+      else if(current.left){
+        if(nodeParentArrayLocation < 0){
+          this.#root = current;
+        } else {
+          const {node:parentNode, dir} = path[nodeParentArrayLocation];
+          if(dir === 1){
+            parentNode.right = current.left;
+          }
+          else {
+            parentNode.left = current.left;
+          }
+          path[path.length-1].node = current.left;
+        }
+      }
+      else {
+        if(nodeParentArrayLocation < 0){
+          this.#root = current;
+        } else {
+          const {node:parentNode, dir} = path[nodeParentArrayLocation];
+          if(dir === 1){
+            parentNode.right = current.right;
+          }
+          else {
+            parentNode.left = current.right;
+          }
+          path[path.length-1].node = current.right;
+        }
+      }
+      
+      for(let i = path.length - 2; i >= 0; i--){
+        const {node} = path[i];
+        node.recalculateHeight();
+        node.recalculateBalanceFactor();
+        if(Math.abs(node.balanceFactor) === 2){
+          let parentNodeConnection;
+          console.log('We have a problem at');
+          console.log(node.toString());
+          if(i === 0){
+            parentNodeConnection = (node) => {this.#root = node};
+          }
+          else {
+            const {node: parentNode, dir} = path[i-1];
+            parentNodeConnection = (dir === 1 ? node => parentNode.right = node : node => parentNode.left = node);
+          }
+          if(node.balanceFactor > 0){
+            if(node.right.balanceFactor > 0){
+              this.#rotate(node.balanceFactor, node.right.balanceFactor, parentNodeConnection, node, node.right, node.right.right)
+            } else {
+              this.#rotate(node.balanceFactor, node.right.balanceFactor, parentNodeConnection, node, node.right, node.right.left)
+            }
+          }
+          else {
+            if(node.right.balanceFactor > 0){
+              this.#rotate(node.balanceFactor, node.right.balanceFactor, parentNodeConnection, node, node.left, node.left.right)
+            } else {
+              this.#rotate(node.balanceFactor, node.right.balanceFactor, parentNodeConnection, node, node.left, node.left.left)
+            }
+          }
+        }
+      }
     }
   }
   contains(data){
@@ -314,16 +399,6 @@ class BinaryTree {
   getRoot(){
     return this.#root;
   }
-  height(node){
-    if(node === null){
-      return 0;
-    } else {
-      return 1 + Math.max(this.height(node.left), this.height(node.right))
-    }
-  }
-  depth(node){
-
-  }
   #prettyPrint(node, prefix = '', isLeft = true){
     if (node.right !== null) {
       this.#prettyPrint(node.right, `${prefix}${isLeft ? '│   ' : '    '}`, false);
@@ -414,4 +489,4 @@ class BinaryTree {
   }
 }
 
-export default BinaryTree;
+export default BinarySearchTree;
