@@ -194,7 +194,7 @@ class BinarySearchTree {
     }
     if(foundNode){
       if(this.#root === current){
-        if(current.left && current.right){ //todo
+        if(current.left && current.right){
           let replacementNode = current.left;
           path[0].dir = -1;
           path.push({node: replacementNode, dir: 1});
@@ -202,7 +202,6 @@ class BinarySearchTree {
             replacementNode = replacementNode.right;
             path.push({node: replacementNode, dir: 1})
           }
-
           // Assign Replacement Right to Current Right and Link Replacements Left with it's parents right
           if(current.left !== replacementNode) {
             const {node: replacementNodeParent} = path[path.length-2];
@@ -311,7 +310,6 @@ class BinarySearchTree {
               this.#LL_Rotation(parentFunc, node, node.left);
             }
           }
-          
         }
       }
       this.#length--;
