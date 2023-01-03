@@ -277,14 +277,11 @@ class BinarySearchTree {
           }
         }
       }
-      console.log('Traversing Path Backwards to Recalc');
       for(let i = path.length-2; i >= 0; i--){
         const {node} = path[i];
-        console.log(node.toString());
         node.recalculateHeight();
         node.recalculateBalanceFactor();
         if(node.balanceFactor >= 2 || node.balanceFactor <= -2){
-          console.log(`We have a problem at ${node.toString()}, balanceFactor: ${node.balanceFactor}`);
           let parentFunc;
           if(i === 0){
             parentFunc = (node) => {this.#root = node}
@@ -478,7 +475,6 @@ class BinarySearchTree {
     this.#prettyPrint(node);
   }
   #RR_Rotation(nodeAParentConnection, nodeA, nodeB){
-    console.log('RR_Rotation');
     nodeAParentConnection(nodeB);
     const {left: BLeft} = nodeB;
     nodeA.right = BLeft;
@@ -489,7 +485,6 @@ class BinarySearchTree {
     nodeB.recalculateBalanceFactor();
   }
   #RL_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC){
-    console.log('RL_Rotation');
     nodeAParentConnection(nodeC);
     const {left: CLeft, right: CRight} = nodeC;
     nodeC.left = nodeA;
@@ -504,7 +499,6 @@ class BinarySearchTree {
     nodeC.recalculateBalanceFactor();
   }
   #LL_Rotation(nodeAParentConnection, nodeA, nodeB){
-    console.log('LL_Rotation');
     nodeAParentConnection(nodeB);
     const {right: BRight} = nodeB;
     nodeA.left = BRight;
@@ -515,7 +509,6 @@ class BinarySearchTree {
     nodeB.recalculateBalanceFactor();
   }
   #LR_Rotation(nodeAParentConnection, nodeA, nodeB, nodeC){
-    console.log('LR_Rotation');
     nodeAParentConnection(nodeC);
     const {left: CLeft, right: CRight} = nodeC;
     nodeC.left = nodeB;
