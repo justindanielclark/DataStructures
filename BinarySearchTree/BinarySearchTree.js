@@ -27,7 +27,7 @@ class BinarySearchTreeNode {
     }
   }
   recalculateBalanceFactor(){
-    this.balanceFactor = this.heightRight - this.heightLeft
+    this.balanceFactor = this.heightRight - this.heightLeft;
   }
 }
 class BinarySearchTree {
@@ -67,9 +67,7 @@ class BinarySearchTree {
         placeInQue++;
       }
     }
-    queToBuild.forEach(item => {
-      this.insert(item)
-    })
+    queToBuild.forEach(item => {this.insert(item);});
   }
   insert(data){
     if(this.#root){
@@ -105,7 +103,7 @@ class BinarySearchTree {
           path.push({
             node: current, 
             dir: 1
-          })
+          });
           if(current.right){
             current = current.right;
           } else {
@@ -128,15 +126,15 @@ class BinarySearchTree {
           if(Math.abs(node.balanceFactor) === 2){
             let parentFunc;
             if(i === 0){
-              parentFunc = (node) => {this.#root = node}
+              parentFunc = (node) => {this.#root = node;};
             }
             else {
               const {node: parentNode, dir} = path[i-1];
               if(dir === 1){
-                parentFunc = (node) => {parentNode.right = node}
+                parentFunc = (node) => {parentNode.right = node;};
               }
               else {
-                parentFunc = (node) => {parentNode.left = node}
+                parentFunc = (node) => {parentNode.left = node;};
               }
             }
             if(node.balanceFactor === 2){
@@ -176,7 +174,7 @@ class BinarySearchTree {
         path.push({
           node: current,
           dir: 0,
-        })
+        });
       } else if (compareResult > 0) {
         path.push({
           node: current,
@@ -200,55 +198,50 @@ class BinarySearchTree {
           path.push({node: replacementNode, dir: 1});
           while(replacementNode.right){
             replacementNode = replacementNode.right;
-            path.push({node: replacementNode, dir: 1})
+            path.push({node: replacementNode, dir: 1});
           }
-          // Assign Replacement Right to Current Right and Link Replacements Left with it's parents right
           if(current.left !== replacementNode) {
             const {node: replacementNodeParent} = path[path.length-2];
             replacementNodeParent.right = replacementNode.left;
             replacementNode.left = current.left; 
           }
-          replacementNode.right = current.right
+          replacementNode.right = current.right;
           this.#root = replacementNode;
-          //Swap Current and Replacement in the Path
           path[0].node = replacementNode;
         }
         else if(current.left){
           this.#root = current.left;
         }
         else if(current.right){
-          this.#root = current.right
+          this.#root = current.right;
         }
         else {
           this.#root = null;
         }
       }
       else {
-        const {node: parentNode, dir} = path[path.length-2]
+        const {node: parentNode, dir} = path[path.length-2];
         if(current.left && current.right){
           const currentIndex = path.length-1;
           let replacementNode = current.left;
           path[currentIndex].dir = -1;
-          path.push({node: replacementNode, dir: 1})
+          path.push({node: replacementNode, dir: 1});
           while(replacementNode.right){
             replacementNode = replacementNode.right;
-            path.push({node: replacementNode, dir: 1})
+            path.push({node: replacementNode, dir: 1});
           }
-          // Assign Replacement Right to Current Right and Link Replacements Left with it's parents right
           if(current.left !== replacementNode) {
             const {node: replacementNodeParent} = path[path.length-2];
             replacementNodeParent.right = replacementNode.left;
             replacementNode.left = current.left; 
           }
-          replacementNode.right = current.right
-          //Swap Parent Link From Current -> ReplacementNode
+          replacementNode.right = current.right;
           if(dir === 1){
             parentNode.right = replacementNode;
           }
           else {
             parentNode.left = replacementNode;
           }
-          //Swap Current and Replacement in the Path
           path[currentIndex].node = replacementNode;
         }
         else if(current.left){
@@ -283,15 +276,15 @@ class BinarySearchTree {
         if(node.balanceFactor >= 2 || node.balanceFactor <= -2){
           let parentFunc;
           if(i === 0){
-            parentFunc = (node) => {this.#root = node}
+            parentFunc = (node) => {this.#root = node;};
           }
           else {
             const {node: parentNode, dir} = path[i-1];
             if(dir === 1){
-              parentFunc = (node) => {parentNode.right = node}
+              parentFunc = (node) => {parentNode.right = node;};
             }
             else {
-              parentFunc = (node) => {parentNode.left = node}
+              parentFunc = (node) => {parentNode.left = node;};
             }
           }
           if(node.balanceFactor === 2){
